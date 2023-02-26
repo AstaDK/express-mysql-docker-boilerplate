@@ -1,52 +1,57 @@
 version: "3.7"
 
 services:
+  # MySQL container for the express application
   express-mysql:
     image: mysql:5.7
-    container_name: express-mysql #always
-    restart: unless-stopped
+    container_name: express-mysql # assign a unique name to the container
+    restart: unless-stopped # ensure that the container restarts unless stopped intentionally
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: express-db
       MYSQL_USER: express
       MYSQL_PASSWORD: 123456
     ports:
-      - "3301:3306"
+      - "3301:3306" # expose port 3306 on the host machine for MySQL connections
     volumes:
-      - ./db:/var/lib/mysql
+      - ./db:/var/lib/mysql # map the local directory ./db to the MySQL data directory in the container
     networks:
-      - common
+      - common # attach to the common network
 
+  # Express application container
   express-api:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
+      - "3001:3000" # expose port 3000 on the host machine for HTTP connections
     volumes:
-      - .:/app
-    restart: unless-stopped #always
-    container_name: express-api
-    command: "npm run dev"
+      - .:/app # map the current directory to the /app directory in the container
+    restart: unless-stopped # ensure that the container restarts unless stopped intentionally
+    container_name: express-api # assign a unique name to the container
+    command: "npm run dev" # run the command "npm run dev" inside the container to start the application
     depends_on:
-      - express-mysql
+      - express-mysql # wait for the express-mysql container to start before starting this container
     networks:
-      - common
+      - common # attach to the common network
 
+  # Adminer container for database management
   express-adminer:
     image: adminer
-    restart: always
-    container_name: express-adminer
+    restart: always # ensure that the container restarts whenever it stops
+    container_name: express-adminer # assign a unique name to the container
     ports:
-      - 8081:8080
+      - 8081:8080 # expose port 8080 on the host machine for HTTP connections
     depends_on:
-      - express-mysql
+      - express-mysql # wait for the express-mysql container to start before starting this container
     networks:
-      - common
-#http://localhost:8081/?server=express-mysql&username=express
+      - common # attach to the common network
+    # access adminer at http://localhost:8081/?server=express-mysql&username=express
 
+# define a named volume for the MySQL data directory
 volumes:
   db:
 
+# define a common network for the containers to communicate with each other
 networks:
   common:
